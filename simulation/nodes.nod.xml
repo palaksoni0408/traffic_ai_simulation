@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nodes>
+  <!-- 4 Traffic Light Junctions (2x2 grid, 400m apart) -->
+  <node id="C1" x="0"   y="0"   type="traffic_light"/>
+  <node id="C2" x="400" y="0"   type="traffic_light"/>
+  <node id="C3" x="0"   y="400" type="traffic_light"/>
+  <node id="C4" x="400" y="400" type="traffic_light"/>
+
+  <!-- Boundary nodes (dead-ends) — 300m from outer junctions -->
+  <!-- South boundary (below C1, C2) -->
+  <node id="S1" x="0"   y="-300" type="dead_end"/>
+  <node id="S2" x="400" y="-300" type="dead_end"/>
+  <!-- North boundary (above C3, C4) -->
+  <node id="N3" x="0"   y="700"  type="dead_end"/>
+  <node id="N4" x="400" y="700"  type="dead_end"/>
+  <!-- West boundary (left of C1, C3) -->
+  <node id="W1" x="-300" y="0"   type="dead_end"/>
+  <node id="W3" x="-300" y="400" type="dead_end"/>
+  <!-- East boundary (right of C2, C4) -->
+  <node id="E2" x="700"  y="0"   type="dead_end"/>
+  <node id="E4" x="700"  y="400" type="dead_end"/>
+</nodes>

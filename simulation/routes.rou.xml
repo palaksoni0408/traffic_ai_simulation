@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+
+    <!-- Vehicle Types -->
+    <vType id="car"       accel="2.6" decel="4.5" sigma="0.5" length="5"  minGap="5"   maxSpeed="13.89" guiShape="passenger"  color="0.8,0.8,0.8"/>
+    <vType id="truck"     accel="1.5" decel="3.0" sigma="0.5" length="10" minGap="6"   maxSpeed="10"    guiShape="truck"       color="0.6,0.4,0.2"/>
+    <vType id="bike"      accel="3.0" decel="5.0" sigma="0.6" length="2"  minGap="3"   maxSpeed="12"    guiShape="motorcycle"  color="0.2,0.6,1.0"/>
+    <vType id="ambulance" vClass="emergency" accel="3.0" decel="5.0" sigma="0.1" length="6" minGap="4" maxSpeed="20" guiShape="emergency" color="1.0,0.0,0.0" speedFactor="1.5"/>
+
+    <!-- ═══ Multi-hop routes across the 2x2 grid ═══ -->
+
+    <!-- Through routes: full traversal -->
+    <route id="r_W1_E2"  edges="W1_C1 C1_C2 C2_E2"/>           <!-- West→East bottom -->
+    <route id="r_E2_W1"  edges="E2_C2 C2_C1 C1_W1"/>           <!-- East→West bottom -->
+    <route id="r_W3_E4"  edges="W3_C3 C3_C4 C4_E4"/>           <!-- West→East top -->
+    <route id="r_E4_W3"  edges="E4_C4 C4_C3 C3_W3"/>           <!-- East→West top -->
+    <route id="r_S1_N3"  edges="S1_C1 C1_C3 C3_N3"/>           <!-- South→North left -->
+    <route id="r_N3_S1"  edges="N3_C3 C3_C1 C1_S1"/>           <!-- North→South left -->
+    <route id="r_S2_N4"  edges="S2_C2 C2_C4 C4_N4"/>           <!-- South→North right -->
+    <route id="r_N4_S2"  edges="N4_C4 C4_C2 C2_S2"/>           <!-- North→South right -->
+
+    <!-- Diagonal routes (3 junctions) -->
+    <route id="r_S1_E4"  edges="S1_C1 C1_C3 C3_C4 C4_E4"/>    <!-- SW corner → NE corner -->
+    <route id="r_E4_S1"  edges="E4_C4 C4_C3 C3_C1 C1_S1"/>    <!-- NE corner → SW corner -->
+    <route id="r_W1_N4"  edges="W1_C1 C1_C2 C2_C4 C4_N4"/>    <!-- W bottom → N right -->
+    <route id="r_N4_W1"  edges="N4_C4 C4_C2 C2_C1 C1_W1"/>    <!-- N right → W bottom -->
+    <route id="r_S2_W3"  edges="S2_C2 C2_C1 C1_C3 C3_W3"/>    <!-- S right → W top -->
+    <route id="r_W3_S2"  edges="W3_C3 C3_C1 C1_C2 C2_S2"/>    <!-- W top → S right -->
+
+    <!-- Single-junction local routes -->
+    <route id="r_S1_W1"  edges="S1_C1 C1_W1"/>                  <!-- local turn at C1 -->
+    <route id="r_W1_S1"  edges="W1_C1 C1_S1"/>
+    <route id="r_E2_S2"  edges="E2_C2 C2_S2"/>                  <!-- local turn at C2 -->
+    <route id="r_S2_E2"  edges="S2_C2 C2_E2"/>
+    <route id="r_N3_W3"  edges="N3_C3 C3_W3"/>                  <!-- local turn at C3 -->
+    <route id="r_W3_N3"  edges="W3_C3 C3_N3"/>
+    <route id="r_E4_N4"  edges="E4_C4 C4_N4"/>                  <!-- local turn at C4 -->
+    <route id="r_N4_E4"  edges="N4_C4 C4_E4"/>
+
+    <!-- ═══ Wave 1: T=1–20 — initial burst, all directions ═══ -->
+    <vehicle id="v001" type="car"   route="r_W1_E2"  depart="1"  departLane="0" departSpeed="max"/>
+    <vehicle id="v002" type="car"   route="r_S1_N3"  depart="2"  departLane="0" departSpeed="max"/>
+    <vehicle id="v003" type="car"   route="r_E2_W1"  depart="3"  departLane="0" departSpeed="max"/>
+    <vehicle id="v004" type="truck" route="r_N3_S1"  depart="4"  departLane="0" departSpeed="max"/>
+    <vehicle id="v005" type="car"   route="r_W3_E4"  depart="5"  departLane="0" departSpeed="max"/>
+    <vehicle id="v006" type="car"   route="r_S2_N4"  depart="6"  departLane="0" departSpeed="max"/>
+    <vehicle id="v007" type="bike"  route="r_E4_W3"  depart="7"  departLane="0" departSpeed="max"/>
+    <vehicle id="v008" type="car"   route="r_N4_S2"  depart="8"  departLane="0" departSpeed="max"/>
+    <vehicle id="v009" type="car"   route="r_S1_E4"  depart="10" departLane="0" departSpeed="max"/>
+    <vehicle id="v010" type="car"   route="r_W1_N4"  depart="12" departLane="0" departSpeed="max"/>
+    <vehicle id="v011" type="truck" route="r_E4_S1"  depart="14" departLane="0" departSpeed="max"/>
+    <vehicle id="v012" type="car"   route="r_S1_W1"  depart="16" departLane="0" departSpeed="max"/>
+    <vehicle id="v013" type="car"   route="r_E2_S2"  depart="18" departLane="0" departSpeed="max"/>
+    <vehicle id="v014" type="bike"  route="r_N3_W3"  depart="19" departLane="0" departSpeed="max"/>
+    <vehicle id="v015" type="car"   route="r_W1_E2"  depart="20" departLane="0" departSpeed="max"/>
+
+    <!-- ═══ Wave 2: T=22–45 — E-W corridor stress ═══ -->
+    <vehicle id="v016" type="car"   route="r_W1_E2"  depart="22" departLane="0" departSpeed="max"/>
+    <vehicle id="v017" type="car"   route="r_E2_W1"  depart="23" departLane="0" departSpeed="max"/>
+    <vehicle id="v018" type="truck" route="r_W3_E4"  depart="24" departLane="0" departSpeed="max"/>
+    <vehicle id="v019" type="car"   route="r_E4_W3"  depart="25" departLane="0" departSpeed="max"/>
+    <vehicle id="v020" type="car"   route="r_W1_E2"  depart="27" departLane="0" departSpeed="max"/>
+    <vehicle id="v021" type="car"   route="r_E2_W1"  depart="29" departLane="0" departSpeed="max"/>
+    <vehicle id="v022" type="bike"  route="r_W3_E4"  depart="31" departLane="0" departSpeed="max"/>
+    <vehicle id="v023" type="car"   route="r_E4_W3"  depart="33" departLane="0" departSpeed="max"/>
+    <vehicle id="v024" type="car"   route="r_W1_E2"  depart="35" departLane="0" departSpeed="max"/>
+    <vehicle id="v025" type="truck" route="r_E2_W1"  depart="37" departLane="0" departSpeed="max"/>
+    <vehicle id="v026" type="car"   route="r_W3_E4"  depart="39" departLane="0" departSpeed="max"/>
+    <vehicle id="v027" type="car"   route="r_S1_N3"  depart="41" departLane="0" departSpeed="max"/>
+    <vehicle id="v028" type="car"   route="r_S2_N4"  depart="43" departLane="0" departSpeed="max"/>
+    <vehicle id="v029" type="car"   route="r_E4_W3"  depart="45" departLane="0" departSpeed="max"/>
+
+    <!-- ═══ Ambulance 1: T=50 — crosses W1 → C1 → C2 → E2 (full E-W bottom) ═══ -->
+    <vehicle id="ambulance_1" type="ambulance" route="r_W1_E2" depart="50" departLane="0" departSpeed="max" color="1.0,0.0,0.0"/>
+
+    <!-- ═══ Wave 3: T=52–80 — N-S corridor stress ═══ -->
+    <vehicle id="v030" type="car"   route="r_S1_N3"  depart="52" departLane="0" departSpeed="max"/>
+    <vehicle id="v031" type="car"   route="r_N3_S1"  depart="54" departLane="0" departSpeed="max"/>
+    <vehicle id="v032" type="car"   route="r_S2_N4"  depart="55" departLane="0" departSpeed="max"/>
+    <vehicle id="v033" type="truck" route="r_N4_S2"  depart="57" departLane="0" departSpeed="max"/>
+    <vehicle id="v034" type="car"   route="r_S1_N3"  depart="59" departLane="0" departSpeed="max"/>
+    <vehicle id="v035" type="car"   route="r_N3_S1"  depart="61" departLane="0" departSpeed="max"/>
+    <vehicle id="v036" type="bike"  route="r_S2_N4"  depart="63" departLane="0" departSpeed="max"/>
+    <vehicle id="v037" type="car"   route="r_N4_S2"  depart="65" departLane="0" departSpeed="max"/>
+    <vehicle id="v038" type="car"   route="r_S1_N3"  depart="67" departLane="0" departSpeed="max"/>
+    <vehicle id="v039" type="truck" route="r_W1_E2"  depart="69" departLane="0" departSpeed="max"/>
+    <vehicle id="v040" type="car"   route="r_N3_S1"  depart="71" departLane="0" departSpeed="max"/>
+    <vehicle id="v041" type="car"   route="r_S2_N4"  depart="73" departLane="0" departSpeed="max"/>
+    <vehicle id="v042" type="car"   route="r_N4_S2"  depart="75" departLane="0" departSpeed="max"/>
+    <vehicle id="v043" type="bike"  route="r_S1_N3"  depart="77" departLane="0" departSpeed="max"/>
+    <vehicle id="v044" type="car"   route="r_E2_W1"  depart="79" departLane="0" departSpeed="max"/>
+
+    <!-- ═══ Ambulance 2: T=85 — diagonal S1 → C1 → C3 → C4 → E4 ═══ -->
+    <vehicle id="ambulance_2" type="ambulance" route="r_S1_E4" depart="85" departLane="0" departSpeed="max" color="1.0,0.0,0.0"/>
+
+    <!-- ═══ Wave 4: T=88–120 — balanced all-direction traffic ═══ -->
+    <vehicle id="v045" type="car"   route="r_W1_E2"  depart="88"  departLane="0" departSpeed="max"/>
+    <vehicle id="v046" type="car"   route="r_S1_N3"  depart="90"  departLane="0" departSpeed="max"/>
+    <vehicle id="v047" type="car"   route="r_E4_W3"  depart="92"  departLane="0" departSpeed="max"/>
+    <vehicle id="v048" type="truck" route="r_N4_S2"  depart="94"  departLane="0" departSpeed="max"/>
+    <vehicle id="v049" type="car"   route="r_W3_E4"  depart="96"  departLane="0" departSpeed="max"/>
+    <vehicle id="v050" type="car"   route="r_E2_W1"  depart="98"  departLane="0" departSpeed="max"/>
+    <vehicle id="v051" type="bike"  route="r_S2_N4"  depart="100" departLane="0" departSpeed="max"/>
+    <vehicle id="v052" type="car"   route="r_N3_S1"  depart="102" departLane="0" departSpeed="max"/>
+    <vehicle id="v053" type="car"   route="r_W1_N4"  depart="104" departLane="0" departSpeed="max"/>
+    <vehicle id="v054" type="car"   route="r_E4_S1"  depart="106" departLane="0" departSpeed="max"/>
+    <vehicle id="v055" type="truck" route="r_S2_W3"  depart="108" departLane="0" departSpeed="max"/>
+    <vehicle id="v056" type="car"   route="r_W3_S2"  depart="110" departLane="0" departSpeed="max"/>
+    <vehicle id="v057" type="car"   route="r_N4_W1"  depart="112" departLane="0" departSpeed="max"/>
+    <vehicle id="v058" type="bike"  route="r_W1_E2"  depart="114" departLane="0" departSpeed="max"/>
+    <vehicle id="v059" type="car"   route="r_S1_N3"  depart="116" departLane="0" departSpeed="max"/>
+    <vehicle id="v060" type="car"   route="r_E2_W1"  depart="118" departLane="0" departSpeed="max"/>
+
+    <!-- ═══ Ambulance 3: T=125 — N-S right column N4 → C4 → C2 → S2 ═══ -->
+    <vehicle id="ambulance_3" type="ambulance" route="r_N4_S2" depart="125" departLane="0" departSpeed="max" color="1.0,0.0,0.0"/>
+
+    <!-- ═══ Wave 5: T=128–165 — heavy cross-grid traffic ═══ -->
+    <vehicle id="v061" type="car"   route="r_W1_E2"  depart="128" departLane="0" departSpeed="max"/>
+    <vehicle id="v062" type="car"   route="r_W3_E4"  depart="130" departLane="0" departSpeed="max"/>
+    <vehicle id="v063" type="car"   route="r_S1_N3"  depart="132" departLane="0" departSpeed="max"/>
+    <vehicle id="v064" type="truck" route="r_S2_N4"  depart="134" departLane="0" departSpeed="max"/>
+    <vehicle id="v065" type="car"   route="r_E2_W1"  depart="136" departLane="0" departSpeed="max"/>
+    <vehicle id="v066" type="car"   route="r_E4_W3"  depart="138" departLane="0" departSpeed="max"/>
+    <vehicle id="v067" type="bike"  route="r_N3_S1"  depart="140" departLane="0" departSpeed="max"/>
+    <vehicle id="v068" type="car"   route="r_N4_S2"  depart="142" departLane="0" departSpeed="max"/>
+    <vehicle id="v069" type="car"   route="r_W1_N4"  depart="144" departLane="0" departSpeed="max"/>
+    <vehicle id="v070" type="truck" route="r_E4_S1"  depart="146" departLane="0" departSpeed="max"/>
+    <vehicle id="v071" type="car"   route="r_S1_E4"  depart="148" departLane="0" departSpeed="max"/>
+    <vehicle id="v072" type="car"   route="r_N4_W1"  depart="150" departLane="0" departSpeed="max"/>
+    <vehicle id="v073" type="bike"  route="r_W3_S2"  depart="152" departLane="0" departSpeed="max"/>
+    <vehicle id="v074" type="car"   route="r_S2_W3"  depart="154" departLane="0" departSpeed="max"/>
+    <vehicle id="v075" type="car"   route="r_W1_E2"  depart="157" departLane="0" departSpeed="max"/>
+    <vehicle id="v076" type="car"   route="r_E2_W1"  depart="159" departLane="0" departSpeed="max"/>
+    <vehicle id="v077" type="truck" route="r_S1_N3"  depart="161" departLane="0" departSpeed="max"/>
+    <vehicle id="v078" type="car"   route="r_N3_S1"  depart="163" departLane="0" departSpeed="max"/>
+    <vehicle id="v079" type="car"   route="r_W3_E4"  depart="165" departLane="0" departSpeed="max"/>
+
+    <!-- ═══ Ambulance 4: T=172 — E-W top row E4 → C4 → C3 → W3 ═══ -->
+    <vehicle id="ambulance_4" type="ambulance" route="r_E4_W3" depart="172" departLane="0" departSpeed="max" color="1.0,0.0,0.0"/>
+
+    <!-- ═══ Wave 6: T=175–220 — final rush ═══ -->
+    <vehicle id="v080" type="car"   route="r_S1_N3"  depart="175" departLane="0" departSpeed="max"/>
+    <vehicle id="v081" type="car"   route="r_W1_E2"  depart="177" departLane="0" departSpeed="max"/>
+    <vehicle id="v082" type="car"   route="r_E4_W3"  depart="179" departLane="0" departSpeed="max"/>
+    <vehicle id="v083" type="truck" route="r_N4_S2"  depart="181" departLane="0" departSpeed="max"/>
+    <vehicle id="v084" type="car"   route="r_S2_N4"  depart="183" departLane="0" departSpeed="max"/>
+    <vehicle id="v085" type="bike"  route="r_W3_E4"  depart="185" departLane="0" departSpeed="max"/>
+    <vehicle id="v086" type="car"   route="r_E2_W1"  depart="187" departLane="0" departSpeed="max"/>
+    <vehicle id="v087" type="car"   route="r_N3_S1"  depart="189" departLane="0" departSpeed="max"/>
+    <vehicle id="v088" type="car"   route="r_W1_N4"  depart="191" departLane="0" departSpeed="max"/>
+    <vehicle id="v089" type="truck" route="r_S1_E4"  depart="193" departLane="0" departSpeed="max"/>
+    <vehicle id="v090" type="car"   route="r_E4_S1"  depart="195" departLane="0" departSpeed="max"/>
+    <vehicle id="v091" type="car"   route="r_N4_W1"  depart="197" departLane="0" departSpeed="max"/>
+    <vehicle id="v092" type="bike"  route="r_W1_E2"  depart="200" departLane="0" departSpeed="max"/>
+    <vehicle id="v093" type="car"   route="r_S1_N3"  depart="203" departLane="0" departSpeed="max"/>
+    <vehicle id="v094" type="car"   route="r_E2_W1"  depart="206" departLane="0" departSpeed="max"/>
+    <vehicle id="v095" type="truck" route="r_W3_E4"  depart="209" departLane="0" departSpeed="max"/>
+    <vehicle id="v096" type="car"   route="r_N4_S2"  depart="212" departLane="0" departSpeed="max"/>
+    <vehicle id="v097" type="car"   route="r_S2_N4"  depart="215" departLane="0" departSpeed="max"/>
+    <vehicle id="v098" type="bike"  route="r_E4_W3"  depart="218" departLane="0" departSpeed="max"/>
+    <vehicle id="v099" type="car"   route="r_N3_S1"  depart="220" departLane="0" departSpeed="max"/>
+
+    <!-- ═══ Ambulance 5: T=230 — full diagonal W1 → C1 → C2 → C4 → N4 ═══ -->
+    <vehicle id="ambulance_5" type="ambulance" route="r_W1_N4" depart="230" departLane="0" departSpeed="max" color="1.0,0.0,0.0"/>
+
+    <!-- ═══ Wave 7: T=233–280 — tail traffic ═══ -->
+    <vehicle id="v100" type="car"   route="r_W1_E2"  depart="233" departLane="0" departSpeed="max"/>
+    <vehicle id="v101" type="car"   route="r_S1_N3"  depart="236" departLane="0" departSpeed="max"/>
+    <vehicle id="v102" type="truck" route="r_E4_W3"  depart="239" departLane="0" departSpeed="max"/>
+    <vehicle id="v103" type="car"   route="r_N4_S2"  depart="242" departLane="0" departSpeed="max"/>
+    <vehicle id="v104" type="car"   route="r_W3_E4"  depart="245" departLane="0" departSpeed="max"/>
+    <vehicle id="v105" type="bike"  route="r_E2_W1"  depart="248" departLane="0" departSpeed="max"/>
+    <vehicle id="v106" type="car"   route="r_S2_N4"  depart="251" departLane="0" departSpeed="max"/>
+    <vehicle id="v107" type="car"   route="r_N3_S1"  depart="254" departLane="0" departSpeed="max"/>
+    <vehicle id="v108" type="truck" route="r_W1_E2"  depart="257" departLane="0" departSpeed="max"/>
+    <vehicle id="v109" type="car"   route="r_E4_S1"  depart="260" departLane="0" departSpeed="max"/>
+    <vehicle id="v110" type="car"   route="r_S1_E4"  depart="263" departLane="0" departSpeed="max"/>
+    <vehicle id="v111" type="bike"  route="r_N4_W1"  depart="266" departLane="0" departSpeed="max"/>
+    <vehicle id="v112" type="car"   route="r_W3_S2"  depart="269" departLane="0" departSpeed="max"/>
+    <vehicle id="v113" type="car"   route="r_S2_W3"  depart="272" departLane="0" departSpeed="max"/>
+    <vehicle id="v114" type="truck" route="r_W1_E2"  depart="275" departLane="0" departSpeed="max"/>
+    <vehicle id="v115" type="car"   route="r_E2_W1"  depart="278" departLane="0" departSpeed="max"/>
+</routes>

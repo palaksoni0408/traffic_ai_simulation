@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>AI Traffic Flow Optimizer — Live Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #07090f;
+      --s1: #0d1117;
+      --s2: #111827;
+      --s3: #1a2236;
+      --border: #1e2d45;
+      --border2: #263348;
+      --blue: #3b82f6;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --purple: #a855f7;
+      --cyan: #06b6d4;
+      --orange: #f97316;
+      --txt: #f1f5f9;
+      --muted: #64748b;
+      --dim: #94a3b8;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column
+    }
+
+    /* grid bg */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(59, 130, 246, .04) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, .04) 1px, transparent 1px);
+      background-size: 50px 50px
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      background: rgba(13, 17, 23, .95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 18px rgba(59, 130, 246, .4)
+    }
+
+    .logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -.4px
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    .hdr-right {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: var(--s3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 7px var(--green);
+      animation: pdot 1.4s ease-in-out infinite
+    }
+
+    @keyframes pdot {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .5;
+        transform: scale(.75)
+      }
+    }
+
+    .dot.red {
+      background: var(--red);
+      box-shadow: 0 0 7px var(--red)
+    }
+
+    .dot.yellow {
+      background: var(--yellow);
+      box-shadow: 0 0 7px var(--yellow)
+    }
+
+    #sim-clock {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--cyan);
+      padding: 5px 12px;
+      background: var(--s3);
+      border: 1px solid var(--border);
+      border-radius: 20px
+    }
+
+    /* ── Emergency Banner ── */
+    #emg-banner {
+      display: none;
+      position: relative;
+      z-index: 30;
+      background: linear-gradient(90deg, #7f1d1d, #991b1b, #7f1d1d);
+      border-bottom: 2px solid var(--red);
+      padding: 9px 24px;
+      text-align: center;
+      flex-shrink: 0;
+      animation: flash-bg .7s ease-in-out infinite alternate
+    }
+
+    #emg-banner.on {
+      display: block
+    }
+
+    @keyframes flash-bg {
+      from {
+        background: linear-gradient(90deg, #7f1d1d, #991b1b, #7f1d1d)
+      }
+
+      to {
+        background: linear-gradient(90deg, #991b1b, #b91c1c, #991b1b)
+      }
+    }
+
+    #emg-banner span {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .8px;
+      color: #fecaca
+    }
+
+    #emg-id {
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff
+    }
+
+    /* ── Main layout ── */
+    .main {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 240px 1fr 300px;
+      grid-template-rows: auto auto;
+      gap: 12px;
+      padding: 12px 16px;
+      height: auto;
+      min-height: calc(100vh - 80px);
+    }
+
+    /* ── Stat strip ── */
+    .stat-strip {
+      grid-column: 1/-1;
+      display: flex;
+      gap: 10px
+    }
+
+    .sc {
+      flex: 1;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color .3s, box-shadow .3s
+    }
+
+    .sc:hover {
+      border-color: var(--blue);
+      box-shadow: 0 0 16px rgba(59, 130, 246, .1)
+    }
+
+    .sc-icon {
+      font-size: 22px;
+      width: 42px;
+      height: 42px;
+      background: var(--s3);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .sc-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 2px
+    }
+
+    .sc-val {
+      font-size: 22px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    .sc-sub {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 1px
+    }
+
+    /* Junction Nav Tabs (Synced with junction.html) */
+    .junc-tabs {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin: 0 20px
+    }
+
+    .junc-tab {
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--s2);
+      color: var(--dim);
+      transition: all .2s;
+      text-decoration: none
+    }
+
+    .junc-tab:hover {
+      border-color: var(--blue);
+      color: var(--txt)
+    }
+
+    .junc-tab.active {
+      background: linear-gradient(135deg, rgba(59, 130, 246, .15), rgba(168, 85, 247, .1));
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 12px rgba(6, 182, 212, .2)
+    }
+
+    .blue {
+      color: var(--blue)
+    }
+
+    .green {
+      color: var(--green)
+    }
+
+    .yellow {
+      color: var(--yellow)
+    }
+
+    .purple {
+      color: var(--purple)
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto
+    }
+
+    .red {
+      color: var(--red)
+    }
+
+    /* ── Left column ── */
+    .col-left {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    /* Junction Network Grid */
+    .junc-network {
+      position: relative;
+      width: 100%;
+      height: 180px;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    .jnet-line-h,
+    .jnet-line-v {
+      position: absolute;
+      background: rgba(59, 130, 246, .25);
+    }
+
+    .jnet-line-h {
+      height: 2px;
+    }
+
+    .jnet-line-v {
+      width: 2px;
+    }
+
+    .junc-node {
+      position: absolute;
+      width: 80px;
+      background: var(--s3);
+      border: 1.5px solid var(--border2);
+      border-radius: 8px;
+      padding: 6px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .3s, box-shadow .3s;
+      z-index: 2;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .junc-node:hover {
+      border-color: var(--blue);
+      box-shadow: 0 0 12px rgba(59, 130, 246, .2);
+    }
+
+    .junc-node.selected {
+      border-color: var(--cyan);
+      box-shadow: 0 0 16px rgba(6, 182, 212, .25);
+    }
+
+    .junc-node.emg-active {
+      border-color: var(--red);
+      animation: pulsebrd 1s ease-in-out infinite;
+    }
+
+    .jn-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--txt);
+    }
+
+    .jn-sigs {
+      display: flex;
+      justify-content: center;
+      gap: 3px;
+      margin: 3px 0;
+    }
+
+    .jn-sig {
+      font-size: 8px;
+    }
+
+    .jn-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+
+    /* Lane cards */
+    .lane-card {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      transition: border-color .4s, box-shadow .4s
+    }
+
+    .lane-card.green-on {
+      border-color: var(--green);
+      box-shadow: 0 0 16px rgba(34, 197, 94, .14)
+    }
+
+    .lane-card.yellow-on {
+      border-color: var(--yellow);
+      box-shadow: 0 0 14px rgba(234, 179, 8, .1)
+    }
+
+    .lane-card.emg {
+      border-color: var(--red);
+      animation: pulsebrd 1s ease-in-out infinite
+    }
+
+    @keyframes pulsebrd {
+
+      0%,
+      100% {
+        box-shadow: 0 0 16px rgba(239, 68, 68, .2)
+      }
+
+      50% {
+        box-shadow: 0 0 30px rgba(239, 68, 68, .5)
+      }
+    }
+
+    .lc-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px
+    }
+
+    .lc-name {
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .sig-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      transition: background .4s, box-shadow .4s
+    }
+
+    .sig-dot.green {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green)
+    }
+
+    .sig-dot.yellow {
+      background: var(--yellow);
+      box-shadow: 0 0 8px var(--yellow)
+    }
+
+    .sig-dot.red {
+      background: var(--red);
+      box-shadow: 0 0 5px rgba(239, 68, 68, .5)
+    }
+
+    .lc-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 700
+    }
+
+    .bar-bg {
+      background: var(--s3);
+      border-radius: 5px;
+      height: 6px;
+      overflow: hidden;
+      margin-bottom: 5px
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width .6s cubic-bezier(.4, 0, .2, 1)
+    }
+
+    .bar-fill.hi {
+      background: linear-gradient(90deg, var(--red), #f97316)
+    }
+
+    .bar-fill.md {
+      background: linear-gradient(90deg, var(--yellow), #f59e0b)
+    }
+
+    .bar-fill.lo {
+      background: linear-gradient(90deg, var(--green), var(--cyan))
+    }
+
+    .lc-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted)
+    }
+
+    /* ── Centre ── */
+    .col-mid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden
+    }
+
+    /* Video feed */
+    .video-card {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex: 1;
+      min-height: 0
+    }
+
+    .vc-hdr {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .vc-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .vc-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(34, 197, 94, .15);
+      border: 1px solid rgba(34, 197, 94, .4);
+      color: var(--green)
+    }
+
+    .vc-badge.amb {
+      background: rgba(239, 68, 68, .18);
+      border-color: rgba(239, 68, 68, .5);
+      color: var(--red);
+      animation: pdot .6s ease-in-out infinite
+    }
+
+    .video-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      background: var(--bg);
+      position: relative
+    }
+
+    #cv-video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block
+    }
+
+    .offline-msg {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted)
+    }
+
+    .offline-msg span {
+      font-size: 13px
+    }
+
+    /* Type pills below video */
+    .type-pills {
+      display: flex;
+      gap: 6px;
+      padding: 8px 14px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border)
+    }
+
+    .pill {
+      flex: 1;
+      text-align: center;
+      padding: 5px 4px;
+      border-radius: 8px;
+      background: var(--s3);
+      font-size: 11px;
+      font-weight: 600
+    }
+
+    /* ── Right column ── */
+    .col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden
+    }
+
+    /* Panel */
+    .panel {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      flex-shrink: 0
+    }
+
+    .panel.grow {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0
+    }
+
+    .ptitle {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 10px
+    }
+
+    /* Before/After comparison */
+    .ba-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px
+    }
+
+    .ba-box {
+      background: var(--s3);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      border: 1px solid var(--border)
+    }
+
+    .ba-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 4px
+    }
+
+    .ba-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 2px
+    }
+
+    .ba-sub {
+      font-size: 10px;
+      color: var(--muted)
+    }
+
+    /* Signal phase blocks */
+    .phase-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px
+    }
+
+    .phase-blk {
+      flex: 1;
+      border-radius: 7px;
+      padding: 8px 4px;
+      text-align: center;
+      background: var(--s3);
+      border: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--muted);
+      transition: all .4s
+    }
+
+    .phase-blk.on {
+      background: rgba(59, 130, 246, .12);
+      border-color: var(--blue);
+      color: var(--blue)
+    }
+
+    .phase-blk .pi {
+      font-size: 18px;
+      display: block;
+      margin-bottom: 3px
+    }
+
+    .phase-blk .pt {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--txt)
+    }
+
+    /* Alerts */
+    .alerts-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-height: 0
+    }
+
+    .alert-item {
+      display: flex;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 7px;
+      font-size: 11px;
+      animation: slin .3s ease
+    }
+
+    @keyframes slin {
+      from {
+        opacity: 0;
+        transform: translateX(-8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .alert-item.emergency {
+      background: rgba(239, 68, 68, .1);
+      border: 1px solid rgba(239, 68, 68, .25)
+    }
+
+    .alert-item.congestion {
+      background: rgba(234, 179, 8, .07);
+      border: 1px solid rgba(234, 179, 8, .2)
+    }
+
+    .alert-item.info {
+      background: rgba(59, 130, 246, .07);
+      border: 1px solid rgba(59, 130, 246, .2)
+    }
+
+    .no-alerts {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      padding: 16px
+    }
+
+    .alerts-list::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .alerts-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* Charts */
+    .chart-wrap {
+      flex: 1;
+      min-height: 0;
+      position: relative
+    }
+
+    /* Animated car dots on SVG intersection (inside video area) */
+    /* Connection error */
+    #conn-err {
+      display: none;
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 100;
+      background: #7f1d1d;
+      color: #fecaca;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 12px
+    }
+
+    #conn-err.on {
+      display: block
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🚦</div>
+      <div>
+        <div class="logo-text">AI Traffic Flow Optimizer</div>
+        <div class="logo-sub">SUMO · YOLOv8 · FastAPI · India Innovates 2026</div>
+      </div>
+    </div>
+
+    <!-- Junction Selection Tabs -->
+    <div class="junc-tabs">
+      <a class="junc-tab active" href="index.html">🌐 Network</a>
+      <a class="junc-tab" href="junction.html?jid=C1">C1</a>
+      <a class="junc-tab" href="junction.html?jid=C2">C2</a>
+      <a class="junc-tab" href="junction.html?jid=C3">C3</a>
+      <a class="junc-tab" href="junction.html?jid=C4">C4</a>
+    </div>
+
+    <div class="hdr-right">
+      <button id="btn-pause" onclick="togglePause()" style="
+      display:flex;align-items:center;gap:6px;padding:6px 16px;
+      background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.45);
+      color:#22c55e;border-radius:20px;font-size:12px;font-weight:600;
+      cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;letter-spacing:.3px">
+        <span id="btn-icon">⏸</span><span id="btn-label">Pause</span>
+      </button>
+      <button onclick="restartSim()" style="
+      display:flex;align-items:center;gap:6px;padding:6px 14px;
+      background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.4);
+      color:#3b82f6;border-radius:20px;font-size:12px;font-weight:600;
+      cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif">
+        🔄 Restart
+      </button>
+      <div class="badge">
+        <div class="dot" id="st-dot"></div><span id="st-txt">Connecting…</span>
+      </div>
+      <div id="sim-clock">T: 0.0s</div>
+    </div>
+  </header>
+
+  <!-- Emergency Banner -->
+  <div id="emg-banner">
+    <span>🚑 EMERGENCY VEHICLE DETECTED — <span id="emg-id"></span> — GREEN CORRIDOR ACTIVE — ALL SIGNALS
+      YIELDING</span>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Stat strip -->
+    <div class="stat-strip">
+      <div class="sc">
+        <div class="sc-icon">🚗</div>
+        <div>
+          <div class="sc-lbl">Total Vehicles</div>
+          <div class="sc-val blue" id="s-total">0</div>
+        </div>
+      </div>
+      <div class="sc">
+        <div class="sc-icon">✅</div>
+        <div>
+          <div class="sc-lbl">Cleared</div>
+          <div class="sc-val green" id="s-cleared">0</div>
+        </div>
+      </div>
+      <div class="sc">
+        <div class="sc-icon">⏱</div>
+        <div>
+          <div class="sc-lbl">Avg Wait</div>
+          <div class="sc-val yellow" id="s-wait">0.0s</div>
+        </div>
+      </div>
+      <div class="sc">
+        <div class="sc-icon">📈</div>
+        <div>
+          <div class="sc-lbl">Time Saved vs Fixed</div>
+          <div class="sc-val purple" id="s-saved">—</div>
+        </div>
+      </div>
+      <div class="sc">
+        <div class="sc-icon">🚑</div>
+        <div>
+          <div class="sc-lbl">Ambulance Events</div>
+          <div class="sc-val red" id="s-amb">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Left: Junction Network Grid -->
+    <div class="col-left" style="overflow-y:auto">
+      <div
+        style="font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;padding:0 2px">
+        🌐 Junction Network</div>
+
+      <!-- 2x2 network grid with connecting lines -->
+      <div class="junc-network">
+        <!-- Connecting lines (CSS) -->
+        <div class="jnet-line-h" style="top:50%;left:25%;width:50%"></div>
+        <div class="jnet-line-v" style="left:25%;top:10%;height:80%"></div>
+        <div class="jnet-line-v" style="left:75%;top:10%;height:80%"></div>
+        <div class="jnet-line-h" style="top:20%;left:25%;width:50%"></div>
+        <div class="jnet-line-h" style="top:80%;left:25%;width:50%"></div>
+
+        <!-- C3 (top-left) -->
+        <a href="junction.html?jid=C3" class="junc-node" style="top:8%;left:8%" id="jn-C3"
+          onclick="event.preventDefault();selectJunction('C3')"
+          ondblclick="window.location.href='junction.html?jid=C3'">
+          <div class="jn-label">C3</div>
+          <div class="jn-sigs">
+            <span class="jn-sig" id="js-C3-N">●</span>
+            <span class="jn-sig" id="js-C3-E">●</span>
+            <span class="jn-sig" id="js-C3-S">●</span>
+            <span class="jn-sig" id="js-C3-W">●</span>
+          </div>
+          <div class="jn-count" id="jc-C3">0</div>
+          <div style="font-size:7px;color:var(--muted);margin-top:2px">Click -> Select | Dbl-Click -> Open</div>
+        </a>
+
+        <!-- C4 (top-right) -->
+        <a href="junction.html?jid=C4" class="junc-node" style="top:8%;right:8%" id="jn-C4"
+          onclick="event.preventDefault();selectJunction('C4')"
+          ondblclick="window.location.href='junction.html?jid=C4'">
+          <div class="jn-label">C4</div>
+          <div class="jn-sigs">
+            <span class="jn-sig" id="js-C4-N">●</span>
+            <span class="jn-sig" id="js-C4-E">●</span>
+            <span class="jn-sig" id="js-C4-S">●</span>
+            <span class="jn-sig" id="js-C4-W">●</span>
+          </div>
+          <div class="jn-count" id="jc-C4">0</div>
+          <div style="font-size:7px;color:var(--muted);margin-top:2px">Click -> Select | Dbl-Click -> Open</div>
+        </a>
+
+        <!-- C1 (bottom-left) -->
+        <a href="junction.html?jid=C1" class="junc-node" style="bottom:8%;left:8%" id="jn-C1"
+          onclick="event.preventDefault();selectJunction('C1')"
+          ondblclick="window.location.href='junction.html?jid=C1'">
+          <div class="jn-label">C1</div>
+          <div class="jn-sigs">
+            <span class="jn-sig" id="js-C1-N">●</span>
+            <span class="jn-sig" id="js-C1-E">●</span>
+            <span class="jn-sig" id="js-C1-S">●</span>
+            <span class="jn-sig" id="js-C1-W">●</span>
+          </div>
+          <div class="jn-count" id="jc-C1">0</div>
+          <div style="font-size:7px;color:var(--muted);margin-top:2px">Click -> Select | Dbl-Click -> Open</div>
+        </a>
+
+        <!-- C2 (bottom-right) -->
+        <a href="junction.html?jid=C2" class="junc-node" style="bottom:8%;right:8%" id="jn-C2"
+          onclick="event.preventDefault();selectJunction('C2')"
+          ondblclick="window.location.href='junction.html?jid=C2'">
+          <div class="jn-label">C2</div>
+          <div class="jn-sigs">
+            <span class="jn-sig" id="js-C2-N">●</span>
+            <span class="jn-sig" id="js-C2-E">●</span>
+            <span class="jn-sig" id="js-C2-S">●</span>
+            <span class="jn-sig" id="js-C2-W">●</span>
+          </div>
+          <div class="jn-count" id="jc-C2">0</div>
+          <div style="font-size:7px;color:var(--muted);margin-top:2px">Click -> Select | Dbl-Click -> Open</div>
+        </a>
+      </div>
+
+      <!-- Selected junction detail -->
+      <div class="panel" style="flex-shrink:0">
+        <div class="ptitle">📍 <span id="sel-junc-title">C1</span> — Lane Detail</div>
+        <div id="sel-junc-lanes">
+          <div class="lane-card" id="lc-North">
+            <div class="lc-hdr">
+              <div class="lc-name">
+                <div class="sig-dot red" id="sd-North"></div>↓ N
+              </div>
+              <div class="lc-count"><span id="ct-North">0</span><span style="font-size:10px;color:var(--muted)">
+                  veh</span></div>
+            </div>
+            <div class="bar-bg">
+              <div class="bar-fill lo" id="bf-North" style="width:0%"></div>
+            </div>
+            <div class="lc-meta"><span>🟢 <span id="gt-North">30s</span></span><span>⏱ <span
+                  id="wt-North">0s</span></span></div>
+          </div>
+          <div class="lane-card" id="lc-South">
+            <div class="lc-hdr">
+              <div class="lc-name">
+                <div class="sig-dot red" id="sd-South"></div>↑ S
+              </div>
+              <div class="lc-count"><span id="ct-South">0</span><span style="font-size:10px;color:var(--muted)">
+                  veh</span></div>
+            </div>
+            <div class="bar-bg">
+              <div class="bar-fill lo" id="bf-South" style="width:0%"></div>
+            </div>
+            <div class="lc-meta"><span>🟢 <span id="gt-South">30s</span></span><span>⏱ <span
+                  id="wt-South">0s</span></span></div>
+          </div>
+          <div class="lane-card" id="lc-East">
+            <div class="lc-hdr">
+              <div class="lc-name">
+                <div class="sig-dot red" id="sd-East"></div>← E
+              </div>
+              <div class="lc-count"><span id="ct-East">0</span><span style="font-size:10px;color:var(--muted)">
+                  veh</span></div>
+            </div>
+            <div class="bar-bg">
+              <div class="bar-fill lo" id="bf-East" style="width:0%"></div>
+            </div>
+            <div class="lc-meta"><span>🟢 <span id="gt-East">30s</span></span><span>⏱ <span
+                  id="wt-East">0s</span></span></div>
+          </div>
+          <div class="lane-card" id="lc-West">
+            <div class="lc-hdr">
+              <div class="lc-name">
+                <div class="sig-dot red" id="sd-West"></div>→ W
+              </div>
+              <div class="lc-count"><span id="ct-West">0</span><span style="font-size:10px;color:var(--muted)">
+                  veh</span></div>
+            </div>
+            <div class="bar-bg">
+              <div class="bar-fill lo" id="bf-West" style="width:0%"></div>
+            </div>
+            <div class="lc-meta"><span>🟢 <span id="gt-West">30s</span></span><span>⏱ <span
+                  id="wt-West">0s</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehicle type breakdown -->
+      <div class="panel" style="flex-shrink:0">
+        <div class="ptitle">🔍 YOLOv8 Detected Types</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div class="ba-box">
+            <div class="ba-lbl">🚗 Cars</div>
+            <div class="ba-val blue" id="tp-car">0</div>
+          </div>
+          <div class="ba-box">
+            <div class="ba-lbl">🚛 Trucks</div>
+            <div class="ba-val orange" id="tp-truck">0</div>
+          </div>
+          <div class="ba-box">
+            <div class="ba-lbl">🏍 Bikes</div>
+            <div class="ba-val cyan" id="tp-bike">0</div>
+          </div>
+          <div class="ba-box">
+            <div class="ba-lbl">🚑 Ambulance</div>
+            <div class="ba-val red" id="tp-amb">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Centre: CV Video feed + density line chart -->
+    <div class="col-mid">
+      <!-- Video feed card -->
+      <div class="video-card">
+        <div class="vc-hdr">
+          <div class="vc-title">🎥 Live CV Feed — YOLOv8 + SUMO Synthetic Pipeline</div>
+          <div class="vc-badge" id="cv-badge">LIVE</div>
+        </div>
+        <div class="video-wrap">
+          <img id="cv-video" src="http://localhost:8000/video-feed" alt="CV Feed"
+            onerror="this.style.display='none';document.getElementById('cv-offline').style.display='flex'" />
+          <div class="offline-msg" id="cv-offline" style="display:none">
+            <span style="font-size:36px">📷</span>
+            <span>CV stream offline — start backend first</span>
+          </div>
+        </div>
+        <div class="type-pills">
+          <div class="pill" style="color:var(--blue)">🚗 Car: <span id="pill-car">0</span></div>
+          <div class="pill" style="color:var(--orange)">🚛 Truck: <span id="pill-truck">0</span></div>
+          <div class="pill" style="color:var(--cyan)">🏍 Bike: <span id="pill-bike">0</span></div>
+          <div class="pill" style="color:var(--red)">🚑 Amb: <span id="pill-amb">0</span></div>
+        </div>
+      </div>
+
+      <!-- Traffic density line chart -->
+      <div class="panel grow" style="min-height:130px;max-height:160px">
+        <div class="ptitle">📊 Real-time Traffic Density (Last 60s)</div>
+        <div class="chart-wrap"><canvas id="density-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Right: AI panel + before/after + alerts -->
+    <div class="col-right">
+
+      <!-- Signal program -->
+      <div class="panel">
+        <div class="ptitle">🔄 AI Signal Program</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
+          Mode: <span style="color:var(--blue);font-weight:600">Density-Proportional Adaptive</span>
+        </div>
+        <div class="phase-row">
+          <div class="phase-blk" id="ph-NS"><span class="pi">↕️</span>
+            <div class="pt" id="pt-NS">30s</div>
+            <div>N+S</div>
+          </div>
+          <div class="phase-blk" id="ph-Y1"><span class="pi">⚡</span>
+            <div class="pt">5s</div>
+            <div>Yel</div>
+          </div>
+          <div class="phase-blk" id="ph-EW"><span class="pi">↔️</span>
+            <div class="pt" id="pt-EW">30s</div>
+            <div>E+W</div>
+          </div>
+          <div class="phase-blk" id="ph-Y2"><span class="pi">⚡</span>
+            <div class="pt">5s</div>
+            <div>Yel</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Before vs After -->
+      <div class="panel">
+        <div class="ptitle">⚡ Before vs After AI</div>
+        <div class="ba-row">
+          <div class="ba-box">
+            <div class="ba-lbl">Fixed (30s each)</div>
+            <div class="ba-val red">120s</div>
+            <div class="ba-sub">cycle time</div>
+          </div>
+          <div class="ba-box">
+            <div class="ba-lbl">AI Optimized</div>
+            <div class="ba-val green" id="ai-cycle">~70s</div>
+            <div class="ba-sub">cycle time</div>
+          </div>
+        </div>
+        <div class="ba-row" style="margin-top:6px">
+          <div class="ba-box">
+            <div class="ba-lbl">Avg Wait Fixed</div>
+            <div class="ba-val red">~45s</div>
+            <div class="ba-sub">per vehicle</div>
+          </div>
+          <div class="ba-box">
+            <div class="ba-lbl">Avg Wait AI</div>
+            <div class="ba-val green" id="ai-wait">9.1s</div>
+            <div class="ba-sub">per vehicle</div>
+          </div>
+        </div>
+        <div
+          style="margin-top:8px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted)">Efficiency Gain</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:var(--green)"
+            id="eff-gain">50%</div>
+        </div>
+      </div>
+
+      <!-- Green time bar chart -->
+      <div class="panel grow" style="min-height:140px;max-height:180px">
+        <div class="ptitle">🟢 Green Time Allocation (seconds)</div>
+        <div class="chart-wrap"><canvas id="green-chart"></canvas></div>
+      </div>
+
+      <!-- Live alerts -->
+      <div class="panel grow" style="min-height:80px">
+        <div class="ptitle">🔔 Live Alerts</div>
+        <div class="alerts-list" id="alert-list">
+          <div class="no-alerts">System nominal ✅</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="conn-err">⚠️ API offline — run: bash run.sh</div>
+
+  <script>
+    const API = 'http://localhost:8000';
+    const MAX_VEH = 14;
+
+    // ── Chart.js setup ────────────────────────────────────────────────────────
+    const densityCtx = document.getElementById('density-chart').getContext('2d');
+    const densityChart = new Chart(densityCtx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          { label: 'North', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.08)', tension: .4, pointRadius: 0, borderWidth: 2 },
+          { label: 'South', data: [], borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.08)', tension: .4, pointRadius: 0, borderWidth: 2 },
+          { label: 'East', data: [], borderColor: '#eab308', backgroundColor: 'rgba(234,179,8,.08)', tension: .4, pointRadius: 0, borderWidth: 2 },
+          { label: 'West', data: [], borderColor: '#a855f7', backgroundColor: 'rgba(168,85,247,.08)', tension: .4, pointRadius: 0, borderWidth: 2 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 10, font: { size: 10 } } } },
+        scales: {
+          x: { ticks: { color: '#64748b', maxTicksLimit: 6, font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.04)' } },
+          y: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.04)' }, min: 0, suggestedMax: 12 },
+        },
+      },
+    });
+
+    const greenCtx = document.getElementById('green-chart').getContext('2d');
+    const greenChart = new Chart(greenCtx, {
+      type: 'bar',
+      data: {
+        labels: ['North', 'South', 'East', 'West'],
+        datasets: [{
+          label: 'Green Time (s)',
+          data: [30, 30, 30, 30],
+          backgroundColor: ['rgba(59,130,246,.7)', 'rgba(34,197,94,.7)', 'rgba(234,179,8,.7)', 'rgba(168,85,247,.7)'],
+          borderColor: ['#3b82f6', '#22c55e', '#eab308', '#a855f7'],
+          borderWidth: 1.5, borderRadius: 5,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 400 },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+          y: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.04)' }, min: 0, max: 65 },
+        },
+      },
+    });
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let alertHistory = [];
+    let lastAmb = false;
+    let ambCount = 0;
+    let selectedJunction = 'C1';
+
+    function selectJunction(jid) {
+      selectedJunction = jid;
+      document.querySelectorAll('.junc-node').forEach(n => n.classList.remove('selected'));
+      document.getElementById('jn-' + jid).classList.add('selected');
+      document.getElementById('sel-junc-title').textContent = jid;
+    }
+    selectJunction('C1');
+
+    // ── Fetch loop ─────────────────────────────────────────────────────────────
+    async function tick() {
+      try {
+        const [td, cv, hist] = await Promise.all([
+          fetch(`${API}/traffic-data`).then(r => r.json()).catch(() => null),
+          fetch(`${API}/cv-data`).then(r => r.json()).catch(() => null),
+          fetch(`${API}/history`).then(r => r.json()).catch(() => null),
+        ]);
+
+        document.getElementById('conn-err').classList.remove('on');
+
+        if (td) updateTraffic(td);
+        if (cv) updateCV(cv);
+        if (hist && hist.history) updateDensityChart(hist.history);
+
+      } catch (e) {
+        document.getElementById('conn-err').classList.add('on');
+        document.getElementById('st-dot').className = 'dot red';
+        document.getElementById('st-txt').textContent = 'API Offline';
+      }
+    }
+
+    function updateTraffic(td) {
+      // Status
+      const amb = td.ambulance_detected;
+      const dot = document.getElementById('st-dot');
+      const stxt = document.getElementById('st-txt');
+      dot.className = 'dot' + (amb ? ' red' : '');
+      stxt.textContent = amb ? '🚑 Emergency Mode' : td.running ? 'Simulation Active' : 'Restarting…';
+      document.getElementById('sim-clock').textContent = `T: ${td.sim_time}s`;
+
+      // Stats
+      document.getElementById('s-total').textContent = td.total_vehicles;
+      document.getElementById('s-cleared').textContent = td.vehicles_cleared;
+      document.getElementById('s-wait').textContent = `${td.avg_wait_time}s`;
+      document.getElementById('s-saved').textContent = `${td.time_saved_pct}%`;
+
+      if (amb && !lastAmb) ambCount++;
+      lastAmb = amb;
+      document.getElementById('s-amb').textContent = ambCount;
+
+      // Banner
+      const banner = document.getElementById('emg-banner');
+      if (amb) { banner.classList.add('on'); document.getElementById('emg-id').textContent = td.ambulance_id || ''; }
+      else { banner.classList.remove('on'); }
+
+      // CV badge
+      const cvb = document.getElementById('cv-badge');
+      if (amb) { cvb.className = 'vc-badge amb'; cvb.textContent = '🚑 AMBULANCE'; }
+      else { cvb.className = 'vc-badge'; cvb.textContent = 'LIVE'; }
+
+      // ── Junction Network Grid update ──
+      const sigColors = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
+      const JIDS = ['C1', 'C2', 'C3', 'C4'];
+      JIDS.forEach(jid => {
+        const jd = (td.junctions || {})[jid] || {};
+        const jlanes = jd.lanes || {};
+        let totalCount = 0;
+        ['North', 'South', 'East', 'West'].forEach(ap => {
+          const sig = (jlanes[ap] || {}).signal || 'red';
+          const ct = (jlanes[ap] || {}).count || 0;
+          totalCount += ct;
+          const shortAp = ap[0]; // N, S, E, W
+          const sigEl = document.getElementById(`js-${jid}-${shortAp}`);
+          if (sigEl) sigEl.style.color = sigColors[sig] || sigColors.red;
+        });
+        const countEl = document.getElementById(`jc-${jid}`);
+        if (countEl) countEl.textContent = totalCount;
+
+        // Emergency highlight
+        const nodeEl = document.getElementById(`jn-${jid}`);
+        if (nodeEl) {
+          nodeEl.classList.toggle('emg-active', !!(jd.emergency_active));
+        }
+      });
+
+      // ── Selected junction lane detail ──
+      const selData = ((td.junctions || {})[selectedJunction] || {}).lanes || td.lanes || {};
+      const APS = ['North', 'South', 'East', 'West'];
+      const gtVals = [];
+      APS.forEach(ap => {
+        const d = selData[ap] || {};
+        const count = d.count || 0;
+        const sig = d.signal || 'red';
+        const gt = d.green_time || 30;
+        const wt = d.wait_time || 0;
+        const pct = Math.min(100, (count / MAX_VEH) * 100);
+
+        const card = document.getElementById(`lc-${ap}`);
+        card.className = 'lane-card' + (amb ? ' emg' : sig === 'green' ? ' green-on' : sig === 'yellow' ? ' yellow-on' : '');
+        document.getElementById(`sd-${ap}`).className = `sig-dot ${sig}`;
+        document.getElementById(`ct-${ap}`).textContent = count;
+        const bf = document.getElementById(`bf-${ap}`);
+        bf.style.width = `${pct}%`;
+        bf.className = 'bar-fill ' + (pct > 65 ? 'hi' : pct > 35 ? 'md' : 'lo');
+        document.getElementById(`gt-${ap}`).textContent = `${gt}s`;
+        document.getElementById(`wt-${ap}`).textContent = `${wt}s`;
+        gtVals.push(gt);
+      });
+
+      // Phase highlight (use selected junction)
+      const nSig = (selData.North || {}).signal || 'red';
+      const eSig = (selData.East || {}).signal || 'red';
+      document.getElementById('ph-NS').className = 'phase-blk' + (nSig === 'green' ? ' on' : '');
+      document.getElementById('ph-Y1').className = 'phase-blk' + (nSig === 'yellow' ? ' on' : '');
+      document.getElementById('ph-EW').className = 'phase-blk' + (eSig === 'green' ? ' on' : '');
+      document.getElementById('ph-Y2').className = 'phase-blk' + (eSig === 'yellow' ? ' on' : '');
+
+      // AI cycle estimate
+      const ns = gtVals[0] || 30; const ew = gtVals[2] || 30;
+      document.getElementById('pt-NS').textContent = `${ns}s`;
+      document.getElementById('pt-EW').textContent = `${ew}s`;
+      const aiCyc = ns + ew + 10;
+      document.getElementById('ai-cycle').textContent = `~${aiCyc}s`;
+      document.getElementById('ai-wait').textContent = `${td.avg_wait_time}s`;
+      document.getElementById('eff-gain').textContent = `${td.time_saved_pct}%`;
+
+      // Green time chart
+      greenChart.data.datasets[0].data = gtVals;
+      greenChart.update('none');
+
+      // Alerts
+      const incoming = td.alerts || [];
+      const t = td.sim_time;
+
+      // Ambulance alert
+      if (amb && !alertHistory.find(a => a.message.includes(td.ambulance_id) && Math.abs(a.ts - t) < 15)) {
+        alertHistory.unshift({ type: 'emergency', message: `🚑 ${td.ambulance_id} detected — green corridor active`, ts: t });
+      }
+
+      // Signal change alerts
+      const nSig2 = (td.lanes?.North || {}).signal || 'red';
+      const eSig2 = (td.lanes?.East || {}).signal || 'red';
+      if (nSig2 === 'green' && !alertHistory.find(a => a.message.includes('N+S GREEN') && Math.abs(a.ts - t) < 8)) {
+        alertHistory.unshift({ type: 'info', message: `🟢 N+S GREEN phase — ${ns}s duration`, ts: t });
+      }
+      if (eSig2 === 'green' && !alertHistory.find(a => a.message.includes('E+W GREEN') && Math.abs(a.ts - t) < 8)) {
+        alertHistory.unshift({ type: 'info', message: `🟢 E+W GREEN phase — ${ew}s duration`, ts: t });
+      }
+
+      // Congestion alerts from backend
+      incoming.forEach(a => {
+        if (!alertHistory.find(h => h.message === a.message && Math.abs(h.ts - t) < 8))
+          alertHistory.unshift({ ...a, ts: t });
+      });
+
+      // AI adjustment alert
+      if (Math.abs(ns - ew) > 10 && !alertHistory.find(a => a.message.includes('AI adjusted') && Math.abs(a.ts - t) < 10)) {
+        const heavier = ns > ew ? 'N+S' : 'E+W';
+        alertHistory.unshift({ type: 'info', message: `⚙️ AI adjusted: ${heavier} gets ${Math.max(ns, ew)}s green (congestion-based)`, ts: t });
+      }
+
+      alertHistory = alertHistory.slice(0, 40);
+      const list = document.getElementById('alert-list');
+      list.innerHTML = alertHistory.length
+        ? alertHistory.map(a => `<div class="alert-item ${a.type || 'info'}"><span style="color:var(--muted);flex-shrink:0">${typeof a.ts === 'number' ? a.ts.toFixed(0) + 's' : a.ts}</span><span>${a.message}</span></div>`).join('')
+        : '<div class="no-alerts">System nominal ✅</div>';
+    }
+
+    function updateCV(cv) {
+      const t = cv.vehicle_types || {};
+      ['car', 'truck', 'bike'].forEach(k => {
+        document.getElementById(`tp-${k}`).textContent = t[k] || 0;
+        document.getElementById(`pill-${k}`).textContent = t[k] || 0;
+      });
+      const amb = t.ambulance || 0;
+      document.getElementById('tp-amb').textContent = amb;
+      document.getElementById('pill-amb').textContent = amb;
+    }
+
+    function updateDensityChart(hist) {
+      if (!hist.length) return;
+      const last = hist.slice(-60);
+      densityChart.data.labels = last.map(h => h.sim_time.toFixed(0) + 's');
+      densityChart.data.datasets[0].data = last.map(h => h.North);
+      densityChart.data.datasets[1].data = last.map(h => h.South);
+      densityChart.data.datasets[2].data = last.map(h => h.East);
+      densityChart.data.datasets[3].data = last.map(h => h.West);
+      densityChart.update('none');
+    }
+
+
+
+    // ── Simulation control ────────────────────────────────────────────────────
+    let simPaused = false;
+
+    function updatePauseBtn(paused) {
+      simPaused = paused;
+      const btn = document.getElementById('btn-pause');
+      const icon = document.getElementById('btn-icon');
+      const lbl = document.getElementById('btn-label');
+      if (paused) {
+        btn.style.background = 'rgba(234,179,8,.18)';
+        btn.style.borderColor = 'rgba(234,179,8,.5)';
+        btn.style.color = '#eab308';
+        icon.textContent = '▶';
+        lbl.textContent = 'Resume';
+      } else {
+        btn.style.background = 'rgba(34,197,94,.15)';
+        btn.style.borderColor = 'rgba(34,197,94,.45)';
+        btn.style.color = '#22c55e';
+        icon.textContent = '⏸';
+        lbl.textContent = 'Pause';
+      }
+    }
+
+    async function togglePause() {
+      const endpoint = simPaused ? 'resume' : 'pause';
+      try {
+        await fetch(`${API}/simulation/${endpoint}`, { method: 'POST' });
+        updatePauseBtn(!simPaused);
+        // Add alert
+        alertHistory.unshift({
+          type: 'info',
+          message: simPaused ? '▶ Simulation resumed' : '⏸ Simulation paused',
+          ts: '—'
+        });
+      } catch (e) {
+        console.error('Control failed:', e);
+      }
+    }
+
+    async function restartSim() {
+      try {
+        // Resume first in case paused, backend loop will restart after sim ends
+        await fetch(`${API}/simulation/resume`, { method: 'POST' });
+        updatePauseBtn(false);
+        alertHistory.unshift({ type: 'info', message: '🔄 Simulation restarting…', ts: '—' });
+      } catch (e) {
+        console.error('Restart failed:', e);
+      }
+    }
+
+    setInterval(tick, 500);
+    tick();
+
+    // Poll pause status every 2s to stay in sync
+    setInterval(async () => {
+      try {
+        const s = await fetch(`${API}/simulation/status`).then(r => r.json());
+        updatePauseBtn(s.paused);
+        // Update status text when paused
+        if (s.paused) {
+          document.getElementById('st-txt').textContent = '⏸ Paused';
+          document.getElementById('st-dot').className = 'dot yellow';
+        }
+      } catch (e) { }
+    }, 2000);
+
+  </script>
+</body>
+
+</html>

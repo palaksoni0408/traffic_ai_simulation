@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<edges>
+  <!-- ═══ External approach edges (boundary → junction and back) ═══ -->
+
+  <!-- South boundary ↔ C1 -->
+  <edge id="S1_C1" from="S1" to="C1" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C1_S1" from="C1" to="S1" numLanes="2" speed="13.89"/>
+  <!-- South boundary ↔ C2 -->
+  <edge id="S2_C2" from="S2" to="C2" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C2_S2" from="C2" to="S2" numLanes="2" speed="13.89"/>
+
+  <!-- North boundary ↔ C3 -->
+  <edge id="N3_C3" from="N3" to="C3" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C3_N3" from="C3" to="N3" numLanes="2" speed="13.89"/>
+  <!-- North boundary ↔ C4 -->
+  <edge id="N4_C4" from="N4" to="C4" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C4_N4" from="C4" to="N4" numLanes="2" speed="13.89"/>
+
+  <!-- West boundary ↔ C1 -->
+  <edge id="W1_C1" from="W1" to="C1" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C1_W1" from="C1" to="W1" numLanes="2" speed="13.89"/>
+  <!-- West boundary ↔ C3 -->
+  <edge id="W3_C3" from="W3" to="C3" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C3_W3" from="C3" to="W3" numLanes="2" speed="13.89"/>
+
+  <!-- East boundary ↔ C2 -->
+  <edge id="E2_C2" from="E2" to="C2" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C2_E2" from="C2" to="E2" numLanes="2" speed="13.89"/>
+  <!-- East boundary ↔ C4 -->
+  <edge id="E4_C4" from="E4" to="C4" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C4_E4" from="C4" to="E4" numLanes="2" speed="13.89"/>
+
+  <!-- ═══ Inter-junction connector edges ═══ -->
+
+  <!-- C1 ↔ C2 (horizontal, bottom row) -->
+  <edge id="C1_C2" from="C1" to="C2" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C2_C1" from="C2" to="C1" numLanes="2" speed="13.89" endOffset="10.0"/>
+
+  <!-- C3 ↔ C4 (horizontal, top row) -->
+  <edge id="C3_C4" from="C3" to="C4" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C4_C3" from="C4" to="C3" numLanes="2" speed="13.89" endOffset="10.0"/>
+
+  <!-- C1 ↔ C3 (vertical, left column) -->
+  <edge id="C1_C3" from="C1" to="C3" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C3_C1" from="C3" to="C1" numLanes="2" speed="13.89" endOffset="10.0"/>
+
+  <!-- C2 ↔ C4 (vertical, right column) -->
+  <edge id="C2_C4" from="C2" to="C4" numLanes="2" speed="13.89" endOffset="10.0"/>
+  <edge id="C4_C2" from="C4" to="C2" numLanes="2" speed="13.89" endOffset="10.0"/>
+</edges>

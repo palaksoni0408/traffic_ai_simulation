@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Junction Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #07090f;
+            --s1: #0d1117;
+            --s2: #111827;
+            --s3: #1a2236;
+            --border: #1e2d45;
+            --border2: #263348;
+            --blue: #3b82f6;
+            --green: #22c55e;
+            --yellow: #eab308;
+            --red: #ef4444;
+            --purple: #a855f7;
+            --cyan: #06b6d4;
+            --orange: #f97316;
+            --txt: #f1f5f9;
+            --muted: #64748b;
+            --dim: #94a3b8
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--txt);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(59, 130, 246, .04) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, .04) 1px, transparent 1px);
+            background-size: 50px 50px
+        }
+
+        /* Header */
+        header {
+            position: relative;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 24px;
+            background: rgba(13, 17, 23, .95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 0 18px rgba(59, 130, 246, .4)
+        }
+
+        .logo-text {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -.3px
+        }
+
+        .logo-sub {
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: .5px
+        }
+
+        /* Junction Nav Tabs */
+        .junc-tabs {
+            display: flex;
+            gap: 6px;
+            align-items: center
+        }
+
+        .junc-tab {
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid var(--border);
+            background: var(--s2);
+            color: var(--dim);
+            transition: all .2s;
+            text-decoration: none
+        }
+
+        .junc-tab:hover {
+            border-color: var(--blue);
+            color: var(--txt)
+        }
+
+        .junc-tab.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, .15), rgba(168, 85, 247, .1));
+            border-color: var(--cyan);
+            color: var(--cyan);
+            box-shadow: 0 0 12px rgba(6, 182, 212, .2)
+        }
+
+        /* Junction Network Grid Styles */
+        .junc-network {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: var(--s2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            flex-shrink: 0
+        }
+
+        .jnet-line-h,
+        .jnet-line-v {
+            position: absolute;
+            background: rgba(59, 130, 246, .2)
+        }
+
+        .jnet-line-h {
+            height: 2px
+        }
+
+        .jnet-line-v {
+            width: 2px
+        }
+
+        .junc-node {
+            position: absolute;
+            width: 76px;
+            background: var(--s3);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            z-index: 2;
+            text-decoration: none;
+            color: inherit
+        }
+
+        .junc-node:hover {
+            border-color: var(--blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .3)
+        }
+
+        .junc-node.active {
+            border-color: var(--cyan);
+            background: rgba(6, 182, 212, .05);
+            box-shadow: 0 0 16px rgba(6, 182, 212, .2)
+        }
+
+        .junc-node.emg {
+            border-color: var(--red);
+            animation: pulse 1s infinite
+        }
+
+        .jn-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--txt)
+        }
+
+        .jn-sigs {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+            margin: 3px 0
+        }
+
+        .jn-sig {
+            font-size: 8px;
+            color: var(--border2);
+            /* Default muted */
+        }
+
+        .jn-sig.green {
+            color: var(--green);
+        }
+
+        .jn-sig.yellow {
+            color: var(--yellow);
+        }
+
+        .jn-sig.red {
+            color: var(--red);
+        }
+
+        .jn-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--cyan)
+        }
+
+        .back-link {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid var(--border);
+            background: var(--s1);
+            color: var(--dim);
+            text-decoration: none;
+            transition: all .2s
+        }
+
+        .back-link:hover {
+            border-color: var(--green);
+            color: var(--green)
+        }
+
+        /* Emergency banner */
+        .emg-bar {
+            background: linear-gradient(90deg, #b91c1c, #dc2626, #b91c1c);
+            color: #fff;
+            text-align: center;
+            padding: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: .5px;
+            display: none;
+            animation: pulse 1.5s ease-in-out infinite
+        }
+
+        .emg-bar.on {
+            display: block
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .7
+            }
+        }
+
+        /* Main grid */
+        .main {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 260px 1fr 300px;
+            grid-template-rows: auto auto 1fr;
+            gap: 12px;
+            padding: 12px 16px;
+            min-height: calc(100vh - 90px)
+        }
+
+        /* Stat strip */
+        .stat-strip {
+            grid-column: 1/-1;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px
+        }
+
+        .sc {
+            background: var(--s2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .sc-icon {
+            font-size: 22px;
+            opacity: .85
+        }
+
+        .sc-lbl {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .4px
+        }
+
+        .sc-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px;
+            font-weight: 700
+        }
+
+        /* Columns */
+        .col-left {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto
+        }
+
+        .col-mid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .col-right {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto
+        }
+
+        /* Lane cards */
+        .lane-card {
+            background: var(--s2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            transition: border-color .3s, box-shadow .3s
+        }
+
+        .lane-card.green-on {
+            border-color: rgba(34, 197, 94, .4);
+            box-shadow: inset 0 0 18px rgba(34, 197, 94, .06)
+        }
+
+        .lane-card.yellow-on {
+            border-color: rgba(234, 179, 8, .35)
+        }
+
+        .lane-card.emg {
+            border-color: rgba(239, 68, 68, .5);
+            animation: pulsebrd 1s ease-in-out infinite
+        }
+
+        @keyframes pulsebrd {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 transparent
+            }
+
+            50% {
+                box-shadow: 0 0 14px rgba(239, 68, 68, .2)
+            }
+        }
+
+        .lc-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px
+        }
+
+        .lc-name {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600
+        }
+
+        .lc-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px;
+            font-weight: 700
+        }
+
+        .sig-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        .sig-dot.green {
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green)
+        }
+
+        .sig-dot.yellow {
+            background: var(--yellow);
+            box-shadow: 0 0 8px var(--yellow)
+        }
+
+        .sig-dot.red {
+            background: var(--red);
+            box-shadow: 0 0 6px rgba(239, 68, 68, .5)
+        }
+
+        .bar-bg {
+            height: 5px;
+            background: var(--s3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 4px 0
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .6s
+        }
+
+        .bar-fill.lo {
+            background: var(--green)
+        }
+
+        .bar-fill.md {
+            background: var(--yellow)
+        }
+
+        .bar-fill.hi {
+            background: var(--red)
+        }
+
+        .lc-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--muted)
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--s2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px
+        }
+
+        .ptitle {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--dim);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: .4px
+        }
+
+        .grow {
+            flex: 1;
+            min-height: 0
+        }
+
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 80px
+        }
+
+        /* Video card */
+        .video-card {
+            background: var(--s2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden
+        }
+
+        .vc-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .vc-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: .4px
+        }
+
+        .vc-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(34, 197, 94, .12);
+            color: var(--green);
+            border: 1px solid rgba(34, 197, 94, .3)
+        }
+
+        .vc-badge.amb {
+            background: rgba(239, 68, 68, .15);
+            color: var(--red);
+            border-color: rgba(239, 68, 68, .4);
+            animation: pulse 1s infinite
+        }
+
+        .video-wrap {
+            position: relative;
+            background: #000;
+            aspect-ratio: 1/1;
+            max-height: 420px
+        }
+
+        .video-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain
+        }
+
+        .offline-msg {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--muted)
+        }
+
+        .type-pills {
+            display: flex;
+            gap: 10px;
+            padding: 8px 14px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600
+        }
+
+        .pill {
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        /* Phase blocks */
+        .phase-row {
+            display: flex;
+            gap: 6px
+        }
+
+        .phase-blk {
+            flex: 1;
+            text-align: center;
+            padding: 8px 4px;
+            background: var(--s3);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 10px;
+            color: var(--muted);
+            transition: all .3s
+        }
+
+        .phase-blk.on {
+            border-color: var(--green);
+            background: rgba(34, 197, 94, .08);
+            color: var(--green)
+        }
+
+        .pt {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--txt);
+            margin: 2px 0
+        }
+
+        .pi {
+            font-size: 14px
+        }
+
+        /* Before/After */
+        .ba-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px
+        }
+
+        .ba-box {
+            background: var(--s3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center
+        }
+
+        .ba-lbl {
+            font-size: 9px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 2px
+        }
+
+        .ba-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 700
+        }
+
+        .ba-sub {
+            font-size: 9px;
+            color: var(--muted)
+        }
+
+        .blue {
+            color: var(--blue)
+        }
+
+        .green {
+            color: var(--green)
+        }
+
+        .yellow {
+            color: var(--yellow)
+        }
+
+        .red {
+            color: var(--red)
+        }
+
+        .purple {
+            color: var(--purple)
+        }
+
+        .cyan {
+            color: var(--cyan)
+        }
+
+        .orange {
+            color: var(--orange)
+        }
+
+        /* Alerts */
+        .alert-scroll {
+            max-height: 200px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px
+        }
+
+        .alert-item {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-size: 11px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            background: var(--s3);
+            border-left: 3px solid var(--blue)
+        }
+
+        .alert-item.emergency {
+            border-left-color: var(--red);
+            background: rgba(239, 68, 68, .06)
+        }
+
+        .alert-item.congestion {
+            border-left-color: var(--yellow);
+            background: rgba(234, 179, 8, .05)
+        }
+
+        .no-alerts {
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            padding: 16px
+        }
+
+        /* Connection error */
+        .conn-err {
+            position: fixed;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #7f1d1d;
+            color: #fca5a5;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 99;
+            display: none
+        }
+
+        .conn-err.on {
+            display: block
+        }
+
+        /* Junction info header */
+        .junc-info {
+            background: linear-gradient(135deg, rgba(59, 130, 246, .08), rgba(6, 182, 212, .05));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            grid-column: 1/-1
+        }
+
+        .junc-info-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--cyan)
+        }
+
+        .junc-info-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--txt)
+        }
+
+        .junc-info-sub {
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .junc-info-status {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid
+        }
+
+        .status-pill.normal {
+            background: rgba(34, 197, 94, .1);
+            color: var(--green);
+            border-color: rgba(34, 197, 94, .3)
+        }
+
+        .status-pill.emergency {
+            background: rgba(239, 68, 68, .12);
+            color: var(--red);
+            border-color: rgba(239, 68, 68, .3);
+            animation: pulse 1s infinite
+        }
+    </style>
+</head>
+
+<body>
+    <div class="conn-err" id="conn-err">⚠ Connection lost — retrying...</div>
+
+    <!-- Header with junction tabs -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🚦</div>
+            <div>
+                <div class="logo-text">AI Traffic Flow Optimizer</div>
+                <div class="logo-sub">Junction Dashboard</div>
+            </div>
+        </div>
+        <div class="junc-tabs">
+            <a class="back-link" href="index.html">🌐 Network</a>
+            <a class="junc-tab" href="junction.html?jid=C1" id="tab-C1">C1</a>
+            <a class="junc-tab" href="junction.html?jid=C2" id="tab-C2">C2</a>
+            <a class="junc-tab" href="junction.html?jid=C3" id="tab-C3">C3</a>
+            <a class="junc-tab" href="junction.html?jid=C4" id="tab-C4">C4</a>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:12px">
+            <span id="st-dot" class="sig-dot green" style="width:8px;height:8px"></span>
+            <span id="st-txt" style="color:var(--muted)">Connecting…</span>
+            <span style="font-family:'JetBrains Mono',monospace;color:var(--blue)" id="sim-clock">T: 0s</span>
+        </div>
+    </header>
+
+    <!-- Emergency banner -->
+    <div class="emg-bar" id="emg-banner">🚨 EMERGENCY VEHICLE DETECTED — <span id="emg-id"></span> — GREEN CORRIDOR
+        ACTIVE</div>
+
+    <div class="main">
+        <!-- Junction Info Header -->
+        <div class="junc-info">
+            <div class="junc-info-id" id="junc-id">C1</div>
+            <div>
+                <div class="junc-info-label" id="junc-name">Junction C1</div>
+                <div class="junc-info-sub" id="junc-desc">Bottom-Left • Connects W1, S1, C2, C3</div>
+            </div>
+            <div class="junc-info-status">
+                <div class="status-pill normal" id="junc-status">AI Active</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--cyan)">
+                    <span id="junc-total">0</span> <span style="font-size:10px;color:var(--muted)">vehicles</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat strip -->
+        <div class="stat-strip">
+            <div class="sc">
+                <div class="sc-icon">🚗</div>
+                <div>
+                    <div class="sc-lbl">Vehicles at Junction</div>
+                    <div class="sc-val cyan" id="s-total">0</div>
+                </div>
+            </div>
+            <div class="sc">
+                <div class="sc-icon">✅</div>
+                <div>
+                    <div class="sc-lbl">Cleared</div>
+                    <div class="sc-val green" id="s-cleared">0</div>
+                </div>
+            </div>
+            <div class="sc">
+                <div class="sc-icon">⏱</div>
+                <div>
+                    <div class="sc-lbl">Avg Wait</div>
+                    <div class="sc-val yellow" id="s-wait">0s</div>
+                </div>
+            </div>
+            <div class="sc">
+                <div class="sc-icon">📈</div>
+                <div>
+                    <div class="sc-lbl">Time Saved</div>
+                    <div class="sc-val green" id="s-saved">0%</div>
+                </div>
+            </div>
+            <div class="sc">
+                <div class="sc-icon">🚑</div>
+                <div>
+                    <div class="sc-lbl">Emergency</div>
+                    <div class="sc-val red" id="s-emg">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Left: Lane status for this junction -->
+        <div class="col-left">
+            <div
+                style="font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;padding:0 2px">
+                🗺 Network Overview</div>
+
+            <div class="junc-network">
+                <!-- Lines -->
+                <div class="jnet-line-h" style="top:50%;left:25%;width:50%"></div>
+                <div class="jnet-line-v" style="left:25%;top:10%;height:80%"></div>
+                <div class="jnet-line-v" style="left:75%;top:10%;height:80%"></div>
+
+                <!-- C3 (top-left) -->
+                <a href="junction.html?jid=C3" class="junc-node" style="top:8%;left:8%" id="jn-C3">
+                    <div class="jn-label">C3</div>
+                    <div class="jn-sigs">
+                        <span class="jn-sig" id="js-C3-N">●</span>
+                        <span class="jn-sig" id="js-C3-E">●</span>
+                        <span class="jn-sig" id="js-C3-S">●</span>
+                        <span class="jn-sig" id="js-C3-W">●</span>
+                    </div>
+                    <div class="jn-count" id="jc-C3">0</div>
+                </a>
+
+                <!-- C4 (top-right) -->
+                <a href="junction.html?jid=C4" class="junc-node" style="top:8%;right:8%" id="jn-C4">
+                    <div class="jn-label">C4</div>
+                    <div class="jn-sigs">
+                        <span class="jn-sig" id="js-C4-N">●</span>
+                        <span class="jn-sig" id="js-C4-E">●</span>
+                        <span class="jn-sig" id="js-C4-S">●</span>
+                        <span class="jn-sig" id="js-C4-W">●</span>
+                    </div>
+                    <div class="jn-count" id="jc-C4">0</div>
+                </a>
+
+                <!-- C1 (bottom-left) -->
+                <a href="junction.html?jid=C1" class="junc-node" style="bottom:8%;left:8%" id="jn-C1">
+                    <div class="jn-label">C1</div>
+                    <div class="jn-sigs">
+                        <span class="jn-sig" id="js-C1-N">●</span>
+                        <span class="jn-sig" id="js-C1-E">●</span>
+                        <span class="jn-sig" id="js-C1-S">●</span>
+                        <span class="jn-sig" id="js-C1-W">●</span>
+                    </div>
+                    <div class="jn-count" id="jc-C1">0</div>
+                </a>
+
+                <!-- C2 (bottom-right) -->
+                <a href="junction.html?jid=C2" class="junc-node" style="bottom:8%;right:8%" id="jn-C2">
+                    <div class="jn-label">C2</div>
+                    <div class="jn-sigs">
+                        <span class="jn-sig" id="js-C2-N">●</span>
+                        <span class="jn-sig" id="js-C2-E">●</span>
+                        <span class="jn-sig" id="js-C2-S">●</span>
+                        <span class="jn-sig" id="js-C2-W">●</span>
+                    </div>
+                    <div class="jn-count" id="jc-C2">0</div>
+                </a>
+            </div>
+
+            <div
+                style="font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;padding:0 2px">
+                🛣 Lane Status</div>
+
+            <div class="lane-card" id="lc-North">
+                <div class="lc-hdr">
+                    <div class="lc-name">
+                        <div class="sig-dot red" id="sd-North"></div>↓ North
+                    </div>
+                    <div class="lc-count"><span id="ct-North">0</span><span style="font-size:10px;color:var(--muted)">
+                            veh</span></div>
+                </div>
+                <div class="bar-bg">
+                    <div class="bar-fill lo" id="bf-North" style="width:0%"></div>
+                </div>
+                <div class="lc-meta"><span>🟢 <span id="gt-North">30s</span></span><span>⏱ <span
+                            id="wt-North">0s</span></span></div>
+            </div>
+            <div class="lane-card" id="lc-South">
+                <div class="lc-hdr">
+                    <div class="lc-name">
+                        <div class="sig-dot red" id="sd-South"></div>↑ South
+                    </div>
+                    <div class="lc-count"><span id="ct-South">0</span><span style="font-size:10px;color:var(--muted)">
+                            veh</span></div>
+                </div>
+                <div class="bar-bg">
+                    <div class="bar-fill lo" id="bf-South" style="width:0%"></div>
+                </div>
+                <div class="lc-meta"><span>🟢 <span id="gt-South">30s</span></span><span>⏱ <span
+                            id="wt-South">0s</span></span></div>
+            </div>
+            <div class="lane-card" id="lc-East">
+                <div class="lc-hdr">
+                    <div class="lc-name">
+                        <div class="sig-dot red" id="sd-East"></div>← East
+                    </div>
+                    <div class="lc-count"><span id="ct-East">0</span><span style="font-size:10px;color:var(--muted)">
+                            veh</span></div>
+                </div>
+                <div class="bar-bg">
+                    <div class="bar-fill lo" id="bf-East" style="width:0%"></div>
+                </div>
+                <div class="lc-meta"><span>🟢 <span id="gt-East">30s</span></span><span>⏱ <span
+                            id="wt-East">0s</span></span></div>
+            </div>
+            <div class="lane-card" id="lc-West">
+                <div class="lc-hdr">
+                    <div class="lc-name">
+                        <div class="sig-dot red" id="sd-West"></div>→ West
+                    </div>
+                    <div class="lc-count"><span id="ct-West">0</span><span style="font-size:10px;color:var(--muted)">
+                            veh</span></div>
+                </div>
+                <div class="bar-bg">
+                    <div class="bar-fill lo" id="bf-West" style="width:0%"></div>
+                </div>
+                <div class="lc-meta"><span>🟢 <span id="gt-West">30s</span></span><span>⏱ <span
+                            id="wt-West">0s</span></span></div>
+            </div>
+
+            <!-- Vehicle type breakdown -->
+            <div class="panel" style="flex-shrink:0">
+                <div class="ptitle">🔍 Vehicle Types Detected</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                    <div class="ba-box">
+                        <div class="ba-lbl">🚗 Cars</div>
+                        <div class="ba-val blue" id="tp-car">0</div>
+                    </div>
+                    <div class="ba-box">
+                        <div class="ba-lbl">🚛 Trucks</div>
+                        <div class="ba-val orange" id="tp-truck">0</div>
+                    </div>
+                    <div class="ba-box">
+                        <div class="ba-lbl">🏍 Bikes</div>
+                        <div class="ba-val cyan" id="tp-bike">0</div>
+                    </div>
+                    <div class="ba-box">
+                        <div class="ba-lbl">🚑 Ambulance</div>
+                        <div class="ba-val red" id="tp-amb">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Centre: CV video feeds (side by side) + chart -->
+        <div class="col-mid">
+            <!-- Side-by-side video feeds -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <!-- Full network view -->
+                <div class="video-card">
+                    <div class="vc-hdr">
+                        <div class="vc-title">🌐 Network View</div>
+                        <div class="vc-badge" id="cv-badge">LIVE</div>
+                    </div>
+                    <div class="video-wrap" style="aspect-ratio:1/1;max-height:350px">
+                        <img id="cv-video" src="http://localhost:8000/video-feed" alt="Network"
+                            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                        <div class="offline-msg" style="display:none">
+                            <span style="font-size:28px">📷</span>
+                            <span style="font-size:10px">Offline</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zoomed junction view -->
+                <div class="video-card">
+                    <div class="vc-hdr">
+                        <div class="vc-title">🔍 <span id="cv-junc-label">C1</span> Zoomed</div>
+                        <div class="vc-badge" id="cv-badge-zoom">LIVE</div>
+                    </div>
+                    <div class="video-wrap" style="aspect-ratio:1/1;max-height:350px">
+                        <img id="cv-video-zoom" alt="Junction Zoom"
+                            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                        <div class="offline-msg" style="display:none">
+                            <span style="font-size:28px">🔍</span>
+                            <span style="font-size:10px">Offline</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="type-pills" style="background:var(--s2);border:1px solid var(--border);border-radius:8px">
+                <div class="pill" style="color:var(--blue)">🚗 Car: <span id="pill-car">0</span></div>
+                <div class="pill" style="color:var(--orange)">🚛 Truck: <span id="pill-truck">0</span></div>
+                <div class="pill" style="color:var(--cyan)">🏍 Bike: <span id="pill-bike">0</span></div>
+                <div class="pill" style="color:var(--red)">🚑 Amb: <span id="pill-amb">0</span></div>
+            </div>
+            <div class="panel grow" style="min-height:120px;max-height:150px">
+                <div class="ptitle">📊 Junction Traffic Density (Last 60s)</div>
+                <div class="chart-wrap"><canvas id="density-chart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Right: AI panel + alerts -->
+        <div class="col-right">
+            <!-- Signal program -->
+            <div class="panel">
+                <div class="ptitle">🔄 AI Signal Program — <span id="sig-junc-label">C1</span></div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Mode: <span
+                        style="color:var(--blue);font-weight:600">Density-Proportional Adaptive</span></div>
+                <div class="phase-row">
+                    <div class="phase-blk" id="ph-NS"><span class="pi">↕️</span>
+                        <div class="pt" id="pt-NS">30s</div>
+                        <div>N+S</div>
+                    </div>
+                    <div class="phase-blk" id="ph-Y1"><span class="pi">⚡</span>
+                        <div class="pt">3s</div>
+                        <div>Yel</div>
+                    </div>
+                    <div class="phase-blk" id="ph-EW"><span class="pi">↔️</span>
+                        <div class="pt" id="pt-EW">30s</div>
+                        <div>E+W</div>
+                    </div>
+                    <div class="phase-blk" id="ph-Y2"><span class="pi">⚡</span>
+                        <div class="pt">3s</div>
+                        <div>Yel</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Green time chart -->
+            <div class="panel grow" style="min-height:130px;max-height:170px">
+                <div class="ptitle">🟢 Green Time Allocation (seconds)</div>
+                <div class="chart-wrap"><canvas id="green-chart"></canvas></div>
+            </div>
+
+            <!-- Alerts -->
+            <div class="panel grow">
+                <div class="ptitle">📢 Live Alerts — <span id="alerts-junc-label">C1</span></div>
+                <div class="alert-scroll" id="alert-list">
+                    <div class="no-alerts">System nominal ✅</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8000';
+        const MAX_VEH = 12;
+
+        // Get junction ID from URL
+        const params = new URLSearchParams(window.location.search);
+        const JID = params.get('jid') || 'C1';
+
+        // Junction metadata
+        const JUNC_META = {
+            C1: { name: 'Junction C1', desc: 'Bottom-Left • Connects W1, S1, C2, C3', neighbors: ['C2', 'C3'] },
+            C2: { name: 'Junction C2', desc: 'Bottom-Right • Connects E2, S2, C1, C4', neighbors: ['C1', 'C4'] },
+            C3: { name: 'Junction C3', desc: 'Top-Left • Connects W3, N3, C1, C4', neighbors: ['C1', 'C4'] },
+            C4: { name: 'Junction C4', desc: 'Top-Right • Connects E4, N4, C2, C3', neighbors: ['C2', 'C3'] },
+        };
+
+        // Set page title & labels
+        document.title = `${JID} — AI Traffic Dashboard`;
+        document.getElementById('junc-id').textContent = JID;
+        document.getElementById('junc-name').textContent = JUNC_META[JID]?.name || JID;
+        document.getElementById('junc-desc').textContent = JUNC_META[JID]?.desc || '';
+        document.getElementById('cv-junc-label').textContent = JID;
+        document.getElementById('cv-video-zoom').src = `${API}/video-feed-junction?jid=${JID}`;
+        document.getElementById('sig-junc-label').textContent = JID;
+        document.getElementById('alerts-junc-label').textContent = JID;
+
+        // Highlight active tab
+        const activeTab = document.getElementById('tab-' + JID);
+        if (activeTab) activeTab.classList.add('active');
+
+        // Charts
+        const densityCtx = document.getElementById('density-chart').getContext('2d');
+        const densityChart = new Chart(densityCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'North', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.1)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+                    { label: 'South', data: [], borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.1)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+                    { label: 'East', data: [], borderColor: '#eab308', backgroundColor: 'rgba(234,179,8,.05)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+                    { label: 'West', data: [], borderColor: '#a855f7', backgroundColor: 'rgba(168,85,247,.05)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+                ],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+                plugins: { legend: { position: 'top', labels: { color: '#94a3b8', usePointStyle: true, pointStyle: 'rect', boxWidth: 8, font: { size: 9 } } } },
+                scales: {
+                    x: { ticks: { color: '#64748b', font: { size: 8 }, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,.03)' } },
+                    y: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.04)' }, min: 0, suggestedMax: 8 },
+                },
+            },
+        });
+
+        const greenCtx = document.getElementById('green-chart').getContext('2d');
+        const greenChart = new Chart(greenCtx, {
+            type: 'bar',
+            data: {
+                labels: ['North', 'South', 'East', 'West'],
+                datasets: [{
+                    label: 'Green Time (s)', data: [30, 30, 30, 30],
+                    backgroundColor: ['rgba(59,130,246,.7)', 'rgba(34,197,94,.7)', 'rgba(234,179,8,.7)', 'rgba(168,85,247,.7)'],
+                    borderColor: ['#3b82f6', '#22c55e', '#eab308', '#a855f7'], borderWidth: 1.5, borderRadius: 5
+                }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, animation: { duration: 400 },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+                    y: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.04)' }, min: 0, max: 65 },
+                },
+            },
+        });
+
+        // Local density history for this junction
+        let densityHistory = [];
+        let alertHistory = [];
+        let lastAmb = false;
+
+        // Polling loop
+        async function tick() {
+            try {
+                const [td, cv] = await Promise.all([
+                    fetch(`${API}/traffic-data`).then(r => r.json()).catch(() => null),
+                    fetch(`${API}/cv-data`).then(r => r.json()).catch(() => null),
+                ]);
+                document.getElementById('conn-err').classList.remove('on');
+                if (td) updateTraffic(td);
+                if (cv) updateCV(cv);
+            } catch (e) {
+                document.getElementById('conn-err').classList.add('on');
+            }
+        }
+
+        function updateTraffic(td) {
+            const amb = td.ambulance_detected;
+            const jData = ((td.junctions || {})[JID] || {});
+            const lanes = jData.lanes || {};
+            const isEmg = !!(jData.emergency_active);
+
+            // Header status
+            document.getElementById('st-txt').textContent = amb ? '🚑 Emergency Mode' : td.running ? 'Active' : 'Restarting…';
+            document.getElementById('sim-clock').textContent = `T: ${td.sim_time}s`;
+
+            // Junction status pill
+            const statusPill = document.getElementById('junc-status');
+            if (isEmg) { statusPill.className = 'status-pill emergency'; statusPill.textContent = '🚑 EMERGENCY'; }
+            else { statusPill.className = 'status-pill normal'; statusPill.textContent = 'AI Active'; }
+
+            // Emergency banner
+            const banner = document.getElementById('emg-banner');
+            if (amb) { banner.classList.add('on'); document.getElementById('emg-id').textContent = td.ambulance_id || ''; }
+            else { banner.classList.remove('on'); }
+
+            // CV badge
+            const cvb = document.getElementById('cv-badge');
+            if (isEmg) { cvb.className = 'vc-badge amb'; cvb.textContent = '🚑 EMERGENCY'; }
+            else { cvb.className = 'vc-badge'; cvb.textContent = 'LIVE'; }
+
+            // Per-lane update
+            let totalCount = 0;
+            const APS = ['North', 'South', 'East', 'West'];
+            const gtVals = [];
+            APS.forEach(ap => {
+                const d = lanes[ap] || {};
+                const count = d.count || 0;
+                const sig = d.signal || 'red';
+                const gt = d.green_time || 30;
+                const wt = d.wait_time || 0;
+                totalCount += count;
+                const pct = Math.min(100, (count / MAX_VEH) * 100);
+
+                document.getElementById(`lc-${ap}`).className = 'lane-card' + (isEmg ? ' emg' : sig === 'green' ? ' green-on' : sig === 'yellow' ? ' yellow-on' : '');
+                document.getElementById(`sd-${ap}`).className = `sig-dot ${sig}`;
+                document.getElementById(`ct-${ap}`).textContent = count;
+                const bf = document.getElementById(`bf-${ap}`);
+                bf.style.width = `${pct}%`;
+                bf.className = 'bar-fill ' + (pct > 65 ? 'hi' : pct > 35 ? 'md' : 'lo');
+                document.getElementById(`gt-${ap}`).textContent = `${gt}s`;
+                document.getElementById(`wt-${ap}`).textContent = `${wt}s`;
+                gtVals.push(gt);
+            });
+
+            // Stats
+            document.getElementById('junc-total').textContent = totalCount;
+            document.getElementById('s-total').textContent = totalCount;
+            document.getElementById('s-cleared').textContent = td.vehicles_cleared;
+            document.getElementById('s-wait').textContent = `${td.avg_wait_time}s`;
+            document.getElementById('s-saved').textContent = `${td.time_saved_pct}%`;
+            document.getElementById('s-emg').textContent = isEmg ? '🚑 ACTIVE' : '—';
+
+            // ── Junction Network Grid Update ──
+            const allJuncs = td.junctions || {};
+            Object.keys(JUNC_META).forEach(jid => {
+                const jd = allJuncs[jid] || {};
+                const node = document.getElementById('jn-' + jid);
+                if (node) {
+                    // Update active/emg class
+                    node.className = 'junc-node' + (jid === JID ? ' active' : jd.emergency_active ? ' emg' : '');
+
+                    // Update count
+                    let jCnt = 0;
+                    Object.values(jd.lanes || {}).forEach(l => jCnt += (l.count || 0));
+                    document.getElementById('jc-' + jid).textContent = jCnt;
+
+                    // Update signals
+                    const jLanes = jd.lanes || {};
+                    ['N', 'S', 'E', 'W'].forEach(dir => {
+                        const fullDir = dir === 'N' ? 'North' : dir === 'S' ? 'South' : dir === 'E' ? 'East' : 'West';
+                        const sig = (jLanes[fullDir] || {}).signal || 'red';
+                        const dot = document.getElementById(`js-${jid}-${dir}`);
+                        if (dot) dot.className = `jn-sig ${sig}`;
+                    });
+                }
+            });
+
+            // Phase blocks
+            const nSig = (lanes.North || {}).signal || 'red';
+            const eSig = (lanes.East || {}).signal || 'red';
+            document.getElementById('ph-NS').className = 'phase-blk' + (nSig === 'green' ? ' on' : '');
+            document.getElementById('ph-Y1').className = 'phase-blk' + (nSig === 'yellow' ? ' on' : '');
+            document.getElementById('ph-EW').className = 'phase-blk' + (eSig === 'green' ? ' on' : '');
+            document.getElementById('ph-Y2').className = 'phase-blk' + (eSig === 'yellow' ? ' on' : '');
+            document.getElementById('pt-NS').textContent = `${gtVals[0]}s`;
+            document.getElementById('pt-EW').textContent = `${gtVals[2]}s`;
+
+            // Green chart
+            greenChart.data.datasets[0].data = gtVals;
+            greenChart.update('none');
+
+            // Density history (local ring buffer)
+            densityHistory.push({
+                t: td.sim_time,
+                n: (lanes.North || {}).count || 0,
+                s: (lanes.South || {}).count || 0,
+                e: (lanes.East || {}).count || 0,
+                w: (lanes.West || {}).count || 0,
+            });
+            if (densityHistory.length > 120) densityHistory.shift();
+            densityChart.data.labels = densityHistory.map(h => h.t.toFixed(0));
+            densityChart.data.datasets[0].data = densityHistory.map(h => h.n);
+            densityChart.data.datasets[1].data = densityHistory.map(h => h.s);
+            densityChart.data.datasets[2].data = densityHistory.map(h => h.e);
+            densityChart.data.datasets[3].data = densityHistory.map(h => h.w);
+            densityChart.update('none');
+
+            // Alerts (junction-specific)
+            const t = td.sim_time;
+            const incoming = (td.alerts || []).filter(a => (a.message || '').includes(JID));
+            incoming.forEach(a => {
+                if (!alertHistory.find(h => h.message === a.message && Math.abs(h.ts - t) < 8))
+                    alertHistory.unshift({ ...a, ts: t });
+            });
+            if (isEmg && !alertHistory.find(a => a.type === 'emergency' && Math.abs(a.ts - t) < 15)) {
+                alertHistory.unshift({ type: 'emergency', message: `🚑 Green corridor active at ${JID}`, ts: t });
+            }
+            if (nSig === 'green' && !alertHistory.find(a => a.message.includes('N+S GREEN') && Math.abs(a.ts - t) < 8)) {
+                alertHistory.unshift({ type: 'info', message: `🟢 ${JID} N+S GREEN — ${gtVals[0]}s`, ts: t });
+            }
+            if (eSig === 'green' && !alertHistory.find(a => a.message.includes('E+W GREEN') && Math.abs(a.ts - t) < 8)) {
+                alertHistory.unshift({ type: 'info', message: `🟢 ${JID} E+W GREEN — ${gtVals[2]}s`, ts: t });
+            }
+            alertHistory = alertHistory.slice(0, 30);
+            const list = document.getElementById('alert-list');
+            list.innerHTML = alertHistory.length
+                ? alertHistory.map(a => `<div class="alert-item ${a.type || 'info'}"><span style="color:var(--muted);flex-shrink:0">${typeof a.ts === 'number' ? a.ts.toFixed(0) + 's' : a.ts}</span><span>${a.message}</span></div>`).join('')
+                : '<div class="no-alerts">System nominal ✅</div>';
+        }
+
+        function updateCV(cv) {
+            const t = cv.vehicle_types || {};
+            document.getElementById('tp-car').textContent = t.car || 0;
+            document.getElementById('tp-truck').textContent = t.truck || 0;
+            document.getElementById('tp-bike').textContent = t.bike || 0;
+            document.getElementById('tp-amb').textContent = t.ambulance || 0;
+            document.getElementById('pill-car').textContent = t.car || 0;
+            document.getElementById('pill-truck').textContent = t.truck || 0;
+            document.getElementById('pill-bike').textContent = t.bike || 0;
+            document.getElementById('pill-amb').textContent = t.ambulance || 0;
+        }
+
+        setInterval(tick, 500);
+        tick();
+    </script>
+</body>
+
+</html>
